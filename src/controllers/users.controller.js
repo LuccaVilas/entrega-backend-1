@@ -1,12 +1,13 @@
-import { User } from "../models/user.model.js";
+import { userRepository } from "../repositories/user.repository.js";
+import { UserDTO } from "../dto/user.dto.js";
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await userRepository.getUsers();
 
     res.json({
       status: "success",
-      users
+      users: users.map(user => new UserDTO(user))
     });
   } catch (error) {
     res.status(500).json({
@@ -18,7 +19,7 @@ export const getUsers = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.uid).select("-password");
+    const user = await userRepository.getUserById(req.params.uid);
 
     if (!user) {
       return res.status(404).json({
@@ -29,7 +30,7 @@ export const getUserById = async (req, res) => {
 
     res.json({
       status: "success",
-      user
+      user: new UserDTO(user)
     });
   } catch (error) {
     res.status(500).json({
@@ -41,11 +42,10 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
+    const user = await userRepository.updateUser(
       req.params.uid,
-      req.body,
-      { new: true }
-    ).select("-password");
+      req.body
+    );
 
     if (!user) {
       return res.status(404).json({
@@ -57,7 +57,7 @@ export const updateUser = async (req, res) => {
     res.json({
       status: "success",
       message: "Usuario actualizado",
-      user
+      user: new UserDTO(user)
     });
   } catch (error) {
     res.status(500).json({
@@ -69,7 +69,7 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.uid);
+    const user = await userRepository.deleteUser(req.params.uid);
 
     if (!user) {
       return res.status(404).json({
